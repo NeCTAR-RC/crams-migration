@@ -1,0 +1,14 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+rcportal_migration/local/local_settings.py
+*.coverage
+coverage.xml
+rcportal_migration/tests/reporter/*.xml
+.tox
+.idea/
+*.sqlite3
+rcportal_migration.egg-info
+log/*.log
+missing_keystone_users/*.csv
+.python-version

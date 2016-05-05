@@ -1,0 +1,33 @@
+# Database Names
+print('----- including local settings .....')
+CRAMS_DB = 'crams_rcportal'
+NECTAR_DB = 'crams_prod'
+
+
+# Database
+# https://docs.djangoproject.com/en/1.8/ref/settings/#databases
+
+DATABASES = {
+    # Default Database, not used but leave as default
+    'default': {},
+
+    # CRAMS Database
+    CRAMS_DB: {
+        'NAME': CRAMS_DB,
+        'ENGINE': 'django.db.backends.mysql',  #'django.db.backends.postgresql_psycopg2'
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '', # leave empty for localhost
+        'PORT': '' # leave empty for default
+    },
+
+    # NeCTAR Database
+    NECTAR_DB: {
+        'NAME': NECTAR_DB,
+        'ENGINE': 'django.db.backends.mysql',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '', # leave empty for localhost
+        'PORT': '' # leave empty for default
+    }
+}
