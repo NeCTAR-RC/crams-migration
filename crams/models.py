@@ -1,3 +1,7 @@
+# coding=utf-8
+"""
+Crams Models
+"""
 from django.db import models
 from account.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -5,13 +9,21 @@ from rest_framework.authtoken.models import Token
 
 import datetime
 
+
 class CramsToken(Token):
+    """
+    CramsToken Model
+    """
     ks_roles = models.TextField(null=True, blank=True)
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
+
 
 class CramsCommon(models.Model):
+    """
+    CramsCommon Model
+    """
     creation_ts = models.DateTimeField(
         auto_now_add=True,
         editable=False
@@ -20,33 +32,45 @@ class CramsCommon(models.Model):
         auto_now=True,
         editable=False
     )
-    created_by = models.ForeignKey(User, related_name="%(class)s_created_by", blank=True, null=True)
-    updated_by = models.ForeignKey(User, related_name="%(class)s_updated_by", blank=True, null=True)
+    created_by = models.ForeignKey(
+        User, related_name="%(class)s_created_by", blank=True, null=True)
+    updated_by = models.ForeignKey(
+        User, related_name="%(class)s_updated_by", blank=True, null=True)
 
     class Meta:
         abstract = True
-        app_label='crams'
+        app_label = 'crams'
+
 
 class UserEvents(CramsCommon):
+    """
+    UserEvents Model
+    """
     event_message = models.TextField()
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
 
 class ContactRole(models.Model):
+    """
+    ContactRole Model
+    """
     name = models.CharField(
         max_length=100, unique=True
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{}'.format(self.name)
 
 
 class Contact(models.Model):
+    """
+    Contact Model
+    """
     title = models.CharField(
         max_length=50, blank=True, null=True
     )
@@ -70,13 +94,17 @@ class Contact(models.Model):
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
-        return '{0} {1} {2} {3}'.format(self.id, self.title, self.given_name, self.surname)
+        return '{0} {1} {2} {3}'.format(
+            self.id, self.title, self.given_name, self.surname)
 
 
 class Provider(CramsCommon):
+    """
+    Provider Model
+    """
     name = models.CharField(max_length=200, unique=False)
     crams_user = models.OneToOneField(User, blank=True, null=True)
     start_date = models.DateField(auto_now_add=True, editable=False)
@@ -84,68 +112,109 @@ class Provider(CramsCommon):
     description = models.TextField(null=True, blank=True)
 
     @classmethod
-    def isProvider(cls, userObj):
-        if isinstance(userObj, User):
-            if userObj.is_active:
-                return hasattr(userObj, 'provider')
+    def is_provider(cls, userobj):
+        """
+        is user a provider
+        :param userobj:
+        :return: :raise Exception:
+        """
+        if isinstance(userobj, User):
+            if userobj.is_active:
+                return hasattr(userobj, 'provider')
             raise Exception('User is not an active Provider')
-        raise Exception('User object expected got {}'.format(repr(userObj)))
+        raise Exception('User object expected got {}'.format(repr(userobj)))
 
-    def getStatusStr(self):
+    def get_status_str(self):
+        """
+
+        get status as string
+        :return:
+        """
         if not self.active:
             return 'inActive'
         return 'current'
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{}'.format(self.name)
 
 
 class ProvisionDetails(CramsCommon):
+    """
+    ProvisionDetails Model
+    The status flow is
+    - From Nothing to Sent
+    - From Sent to Provisioned or Failed
+    - From Provisioned to Updated
+    - From Failed to Updated
+    - From Updated to Update Sent
+    - From Update Sent to Provisioned or Failed
+    """
     SENT = 'S'
     PROVISIONED = 'P'
-    PROVISION_EXTEND = 'X'
+    POST_PROVISION_UPDATE = 'U'
+    POST_PROVISION_UPDATE_SENT = 'X'
     FAILED = 'F'
-    STATUS_CHOICES = (
-        (SENT, 'Sent'), (PROVISIONED, 'Provisioned'), (FAILED, 'Failed'), (PROVISION_EXTEND, 'Extend'),
-    )
-    status =  models.CharField(max_length=1, choices=STATUS_CHOICES, default=SENT)
+    RESEND_LATER = 'L'
+    SET_OF_SENT = frozenset([SENT, POST_PROVISION_UPDATE_SENT])
+    READY_TO_SEND_SET = frozenset([RESEND_LATER, POST_PROVISION_UPDATE])
+    STATUS_CHOICES = ((SENT, 'Sent'), (PROVISIONED, 'Provisioned'),
+                      (FAILED, 'Failed'), (RESEND_LATER, 'Resend'),
+                      (POST_PROVISION_UPDATE, 'Updated'),
+                      (POST_PROVISION_UPDATE_SENT, 'Update Sent'),)
+    status = models.CharField(
+        max_length=1, choices=STATUS_CHOICES, default=SENT)
     provider = models.ForeignKey(Provider, related_name='provisioned_requests')
     message = models.TextField(blank=True, null=True)
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{}. {} : {}'.format(self.id, self.status, self.message)
 
 
 class ProvisionableItem(models.Model):
-    provision_details = models.OneToOneField(ProvisionDetails, blank=True, null=True, related_name='%(class)s')
+    """
+    ProvisionableItem Model
+    """
+    provision_details = models.OneToOneField(
+        ProvisionDetails, blank=True, null=True, related_name='%(class)s')
 
     class Meta:
         abstract = True
-        app_label='crams'
+        app_label = 'crams'
 
-    def getProvider(self):
-        raise NotImplementedError('Get Provider not implemented for abstract Product Request model')
+    def get_provider(self):
+        """
+        get provider
+        :raise NotImplementedError:
+        """
+        raise NotImplementedError(
+            'Get Provider not implemented for abstract Product Request model')
 
 
 class ProjectIDSystem(models.Model):
+    """
+    ProjectIDSystem Model
+    """
     system = models.CharField(
         max_length=100
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{}'.format(self.system)
 
 
 class FundingBody(models.Model):
+    """
+    FundingBody Model
+    """
     name = models.CharField(
         max_length=200
     )
@@ -153,37 +222,43 @@ class FundingBody(models.Model):
     email = models.EmailField()
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} - {}'.format(self.name, self.email)
 
 
 class FundingScheme(models.Model):
+    """
+    FundingScheme Model
+    """
     funding_scheme = models.CharField(
         max_length=200
     )
 
-    funding_body = models.ForeignKey(FundingBody, related_name='funding_schemes')
+    funding_body = models.ForeignKey(
+        FundingBody, related_name='funding_schemes')
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} {}'.format(self.funding_body.name, self.funding_scheme)
 
 
 class Project(CramsCommon):
-    # for project versioning, if parent_project is null which means it's a latest project request
+    """
+    Project Model
+    """
+    # for project versioning, if parent_project is null which means it's a
+    # latest project request
     parent_project = models.ForeignKey('Project', null=True, blank=True)
 
     title = models.CharField(
         max_length=255
     )
 
-    description = models.CharField(
-        max_length=255
-    )
+    description = models.TextField()
 
     notes = models.TextField(
         null=True,
@@ -192,50 +267,73 @@ class Project(CramsCommon):
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         if self.parent_project:
-            return '{}.{} - (Parent) {}'.format(self.id, self.title, self.parent_project.id)
-        else :
+            return '{}.{} - (Parent) {}'.format(self.id,
+                                                self.title,
+                                                self.parent_project.id)
+        else:
             return '{}.{}'.format(self.id, self.title)
 
 
 class ProjectContact(models.Model):
+    """
+    ProjectContact Model
+    """
     project = models.ForeignKey(Project, related_name='project_contacts')
     contact = models.ForeignKey(Contact, related_name='project_contacts')
-    contact_role = models.ForeignKey(ContactRole, related_name='project_contacts')
+    contact_role = models.ForeignKey(
+        ContactRole, related_name='project_contacts')
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
+
 
 class ProjectProvisionDetails(models.Model):
-    project = models.ForeignKey(Project, related_name='linked_provisiondetails')
-    provision_details = models.ForeignKey(ProvisionDetails, related_name='linked_projects')
+    """
+    ProjectProvisionDetails Model
+    """
+    project = models.ForeignKey(
+        Project, related_name='linked_provisiondetails')
+    provision_details = models.ForeignKey(
+        ProvisionDetails, related_name='linked_projects')
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
+
 
 class ProjectID(models.Model):
+    """
+    ProjectID Model
+    """
     identifier = models.CharField(max_length=64)
 
     project = models.ForeignKey(Project, related_name='project_ids')
 
     system = models.ForeignKey(ProjectIDSystem, related_name='project_ids')
 
-    def getProvider(self):
+    def get_provider(self):
+        """
+        get_provider
+        :return:
+        """
         if self.provision_details:
             return self.provision_details.provider
         return None
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} {}'.format(self.identifier, self.project)
 
 
 class RequestStatus(models.Model):
+    """
+    RequestStatus Model
+    """
     code = models.CharField(
         max_length=50
     )
@@ -245,15 +343,19 @@ class RequestStatus(models.Model):
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} {} {}'.format(self.id, self.code, self.status)
 
 
 class Request(CramsCommon):
+    """
+    Request Model
+    """
     # For versioning
-    parent_request = models.ForeignKey('Request', null=True, blank=True, related_name='history')
+    parent_request = models.ForeignKey(
+        'Request', null=True, blank=True, related_name='history')
 
     project = models.ForeignKey(Project, related_name='requests')
 
@@ -273,13 +375,17 @@ class Request(CramsCommon):
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{}.{}'.format(self.id, self.project.title)
 
+
 class ProductCommon(models.Model):
-    name = models.CharField( max_length=200 )
+    """
+    ProductCommon Model
+    """
+    name = models.CharField(max_length=200)
 
     funding_body = models.ForeignKey(FundingBody, related_name='%(class)s')
 
@@ -287,16 +393,23 @@ class ProductCommon(models.Model):
 
     class Meta:
         abstract = True
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} {}'.format(self.id, self.name)
 
+
 class ComputeProduct(ProductCommon):
+    """
+    ComputeProduct Model
+    """
     pass
 
 
 class ComputeRequest(ProvisionableItem):
+    """
+    ComputeRequest Model
+    """
     instances = models.IntegerField(
         default=2,
         validators=[MinValueValidator(1)]
@@ -327,21 +440,34 @@ class ComputeRequest(ProvisionableItem):
         validators=[MinValueValidator(1)]
     )
 
-    compute_product = models.ForeignKey(ComputeProduct, related_name='compute_requests')
+    compute_product = models.ForeignKey(
+        ComputeProduct, related_name='compute_requests')
 
     request = models.ForeignKey(Request, related_name='compute_requests')
 
-    def getProvider(self):
+    def get_provider(self):
+        """
+        get_provider
+
+        :return:
+        """
         return self.compute_product.provider
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
-        return '{}/{}: {} {} {}'.format(self.id, self.request.id, self.instances, self.cores, self.core_hours)
+        return '{}/{}: {} {} {}'.format(self.id,
+                                        self.request.id,
+                                        self.instances,
+                                        self.cores,
+                                        self.core_hours)
 
 
 class FORCode(models.Model):
+    """
+    FORCode Model
+    """
     code = models.CharField(
         max_length=50
     )
@@ -351,13 +477,16 @@ class FORCode(models.Model):
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} {}'.format(self.code, self.description)
 
 
 class Domain(models.Model):
+    """
+    Domain Model
+    """
     percentage = models.FloatField(
         default=0.0
     )
@@ -367,13 +496,19 @@ class Domain(models.Model):
     for_code = models.ForeignKey(FORCode, related_name='domains')
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
-        return '{} {} {}'.format(self.project.title, self.for_code.code, self.percentage)
+        return '{} {} {}'.format(
+            self.project.title,
+            self.for_code.code,
+            self.percentage)
 
 
 class SupportedInstitution(models.Model):
+    """
+    SupportedInstitution Model
+    """
     institution = models.CharField(
         max_length=200
     )
@@ -381,13 +516,16 @@ class SupportedInstitution(models.Model):
     project = models.ForeignKey(Project, related_name='institutions')
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{}'.format(self.institution)
 
 
 class Publication(models.Model):
+    """
+    Publication Model
+    """
     reference = models.CharField(
         max_length=255
     )
@@ -395,25 +533,31 @@ class Publication(models.Model):
     project = models.ForeignKey(Project, related_name='publications')
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{}'.format(self.reference)
 
 
 class GrantType(models.Model):
+    """
+    GrantType Model
+    """
     description = models.CharField(
         max_length=200
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} {}'.format(self.id, self.description)
 
 
 class Grant(models.Model):
+    """
+    Grant Model
+    """
     project = models.ForeignKey(Project, related_name='grants')
 
     grant_type = models.ForeignKey(GrantType, related_name='grants')
@@ -443,47 +587,65 @@ class Grant(models.Model):
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
-        return '{} {} {}'.format(self.grant_type, self.funding_body, self.start_year)
+        return '{} {} {}'.format(
+            self.grant_type,
+            self.funding_body,
+            self.start_year)
 
 
 class StorageType(models.Model):
+    """
+    StorageType Model
+    """
     storage_type = models.CharField(
         max_length=100
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{}'.format(self.storage_type)
 
+
 class Zone(models.Model):
+    """
+    Zone Model
+    """
     name = models.CharField(max_length=64)
     description = models.TextField()
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{}'.format(self.name)
 
 
 class StorageProduct(ProductCommon):
-    zone = models.ForeignKey(Zone, related_name='storage_products', null=True, blank=True)
+    """
+    StorageProduct Model
+    """
+    zone = models.ForeignKey(
+        Zone, related_name='storage_products', null=True, blank=True)
 
-    storage_type = models.ForeignKey(StorageType, related_name='storage_products')
+    storage_type = models.ForeignKey(
+        StorageType, related_name='storage_products')
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} - {}'.format(self.name, self.provider)
 
 
 class StorageRequest(ProvisionableItem):
+    """
+    StorageRequest Model
+    """
     quota = models.FloatField(
         default=0.0
     )
@@ -492,21 +654,33 @@ class StorageRequest(ProvisionableItem):
         default=0.0
     )
 
-    storage_product = models.ForeignKey(StorageProduct, related_name='storage_requests')
+    storage_product = models.ForeignKey(
+        StorageProduct, related_name='storage_requests')
 
     request = models.ForeignKey(Request, related_name='storage_requests')
 
-    def getProvider(self):
+    def get_provider(self):
+        """
+
+
+        :return:
+        """
         return self.storage_product.provider
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
-        return '{}/{}: {} {}'.format(self.id, self.request.id, self.storage_product.name, self.quota)
+        return '{}/{}: {} {}'.format(self.id,
+                                     self.request.id,
+                                     self.storage_product.name,
+                                     self.quota)
 
 
 class Question(models.Model):
+    """
+    Question Model
+    """
     key = models.CharField(
         max_length=50
     )
@@ -520,71 +694,93 @@ class Question(models.Model):
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} {} {}'.format(self.key, self.question_type, self.question)
 
 
 class ComputeRequestQuestionResponse(models.Model):
+    """
+    ComputeRequestQuestionResponse Model
+    """
     question_response = models.TextField(
         max_length=1024,
         blank=True
     )
 
-    question = models.ForeignKey(Question, related_name='compute_question_responses')
+    question = models.ForeignKey(
+        Question, related_name='compute_question_responses')
 
-    compute_request = models.ForeignKey(ComputeRequest, related_name='compute_question_responses')
+    compute_request = models.ForeignKey(
+        ComputeRequest, related_name='compute_question_responses')
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
 
 class StorageRequestQuestionResponse(models.Model):
+    """
+    StorageRequestQuestionResponse Model
+    """
     question_response = models.TextField(
         max_length=1024,
         blank=True
     )
 
-    question = models.ForeignKey(Question, related_name='storage_question_responses')
+    question = models.ForeignKey(
+        Question, related_name='storage_question_responses')
 
-    storage_request = models.ForeignKey(StorageRequest, related_name='storage_question_responses')
+    storage_request = models.ForeignKey(
+        StorageRequest, related_name='storage_question_responses')
 
     class Meta:
-        app_label='crams'
-
+        app_label = 'crams'
 
 
 class ProjectQuestionResponse(models.Model):
+    """
+    ProjectQuestionResponse Model
+    """
     question_response = models.TextField(
         max_length=1024,
         blank=True
 
     )
 
-    question = models.ForeignKey(Question, related_name='project_question_responses')
+    question = models.ForeignKey(
+        Question, related_name='project_question_responses')
 
-    project = models.ForeignKey(Project, related_name='project_question_responses')
+    project = models.ForeignKey(
+        Project, related_name='project_question_responses')
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
 
 class RequestQuestionResponse(models.Model):
+    """
+    RequestQuestionResponse Model
+    """
     question_response = models.TextField(
         max_length=1024,
         blank=True
     )
 
-    question = models.ForeignKey(Question, related_name='request_question_responses')
+    question = models.ForeignKey(
+        Question, related_name='request_question_responses')
 
-    request = models.ForeignKey(Request, related_name='request_question_responses')
+    request = models.ForeignKey(
+        Request, related_name='request_question_responses')
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
 
 class Duration(models.Model):
+    """
+    Duration Model
+    """
     duration = models.IntegerField(
         default=1,
         validators=[MinValueValidator(1)]
@@ -594,13 +790,16 @@ class Duration(models.Model):
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} {}'.format(self.duration, self.duration_label)
 
 
 class AllocationHome(models.Model):
+    """
+    Allocation Home
+    """
     code = models.CharField(
         max_length=50
     )
@@ -609,7 +808,18 @@ class AllocationHome(models.Model):
     )
 
     class Meta:
-        app_label='crams'
+        app_label = 'crams'
 
     def __str__(self):
         return '{} {} {}'.format(self.id, self.code, self.description)
+
+
+class InternalMigrationData(models.Model):
+    data = models.TextField()
+    system = models.ForeignKey(ProjectIDSystem)
+    project = models.ForeignKey(Project, null=True, blank=True)
+    request = models.ForeignKey(Request, null=True, blank=True)
+    contact = models.ForeignKey(Contact, null=True, blank=True)
+
+    class Meta:
+        app_label = 'crams'

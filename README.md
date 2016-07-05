@@ -17,7 +17,7 @@ install tox:
 install mysql lib:
 
 		sudo apt-get install mysql-server
-		sudo apt-get install python3.4-dev
+		sudo apt-get install python3.5-dev
 		sudo apt-get install libmysqlclient-dev
 
 Export mysql_config path if on mac os:
