@@ -10,7 +10,7 @@ def load_forcode_data_from_sql():
     import os
 
     sql_statements = open(os.path.join(BASE_DIR,
-                                       'crams/sql/../sql/../sql/../sql/../sql/forcode.sql'), 'r').read()
+                                       'crams/sql/forcode.sql'), 'r').read()
 
     return sql_statements
 
