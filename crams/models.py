@@ -163,7 +163,7 @@ class ProvisionDetails(CramsCommon):
     STATUS_CHOICES = ((SENT, 'Sent'), (PROVISIONED, 'Provisioned'),
                       (FAILED, 'Failed'), (RESEND_LATER, 'Resend'),
                       (POST_PROVISION_UPDATE, 'Updated'),
-                      (POST_PROVISION_UPDATE_SENT, 'Update Sent'),)
+                      (POST_PROVISION_UPDATE_SENT, 'Update Sent'), )
     status = models.CharField(
         max_length=1, choices=STATUS_CHOICES, default=SENT)
     provider = models.ForeignKey(Provider, related_name='provisioned_requests')
@@ -258,7 +258,9 @@ class Project(CramsCommon):
         max_length=255
     )
 
-    description = models.TextField()
+    description = models.CharField(
+        max_length=255
+    )
 
     notes = models.TextField(
         null=True,
@@ -812,6 +814,17 @@ class AllocationHome(models.Model):
 
     def __str__(self):
         return '{} {} {}'.format(self.id, self.code, self.description)
+
+
+class NotificationTemplate(models.Model):
+    funding_body = models.ForeignKey(FundingBody,
+                                     related_name='notification_templates')
+    request_status = models.ForeignKey(RequestStatus)
+    template_file_path = models.CharField(max_length=99)
+
+    class Meta:
+        app_label = 'crams'
+        unique_together = ("funding_body", "request_status")
 
 
 class InternalMigrationData(models.Model):
