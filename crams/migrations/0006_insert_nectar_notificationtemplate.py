@@ -5,7 +5,7 @@ from django.db import migrations
 
 
 def load_nectar_notification_data_from_sql():
-    from crams.settings import BASE_DIR
+    from rcportal_migtation.settings import BASE_DIR
     import os
 
     file_name = 'crams/sql/nectar_notifications.sql'
