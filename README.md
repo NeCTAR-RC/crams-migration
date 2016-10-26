@@ -31,6 +31,12 @@ From the project root directory, create the virtual environment by running the t
 This will create ".tox/" directory, to activate the virtualenv run: 
 
 		source .tox/bin/activate
+		
+## Setting up source database
+The migration requires the keystone user list for it to map the keystone users to their allocation request.
+
+A keystone user dump in csv form must be included in the "keystone_user" directory. The csv file only needs the "ID" and "Name" fields.
+
 
 ## To run migration:
 Setup the source and target database in:
@@ -44,7 +50,7 @@ Setup the source and target database in:
 2. Run django command to find the missing keystone users from source database
 
 		python manage.py findmissinguser
-	- It will generate a file called user_not_found_requests.csv under missing_keystone_users directory
+	- It will generate a file called "user_not_found_requests.csv" under "keystone_user" directory
 
 	- Go through all user emails and find the current user in keystone based on the created_by id
 
