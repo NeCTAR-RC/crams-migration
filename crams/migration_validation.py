@@ -1,5 +1,6 @@
 import logging
 import datetime
+import csv
 
 from django.db.models import Q
 import simplejson
@@ -16,8 +17,12 @@ class MigrationValidation:
     def __init__(self):
         self.missing_users = None
         json_file = open(
-            BASE_DIR + '/missing_keystone_users/missing_keystone_users.json')
+            BASE_DIR + '/keystone_users/missing_keystone_users.json')
         self.missing_users = simplejson.load(json_file)
+
+        # load keystone user from csv file
+        keystone_users_data = open(BASE_DIR + '/keystone_users/keystone-users.csv')
+        self.keystone_users_list = list(csv.reader(keystone_users_data))
 
     def validate(self):
         print('migration validation ...')
@@ -143,11 +148,16 @@ class MigrationValidation:
         self.compare_request(nc_request, crams_project)
 
     def find_keystone_user(self, email):
-        keystone_users = nc.KeystoneUser.objects.filter(name=email)
-        if keystone_users:
-            keystone_user = keystone_users[0]
-        else:
+        try:
+            keystone_user_dict = [x for x in self.keystone_users_list if x[1] == email][0]
+
+            keystone_user = nc.KeystoneUser()
+            keystone_user.uuid = keystone_user_dict[0]
+            keystone_user.name = keystone_user_dict[1]
+
+        except:
             keystone_user_dict = self.missing_users.get(email)
+
             if keystone_user_dict:
                 keystone_user = nc.KeystoneUser()
                 keystone_user.uuid = keystone_user_dict['uuid']
@@ -155,6 +165,7 @@ class MigrationValidation:
                 keystone_user.extra = keystone_user_dict['extra']
             else:
                 keystone_user = None
+
         return keystone_user
 
     def compare_user(self, nc_request, cm_project):

@@ -26,6 +26,8 @@ parent_count = 0
 
 # Migration function starting point, run this to start migration
 def migrate():
+    global user_errors, user_count, parent_errors, parent_count
+
     # get all allocation request where parent is None
     nectar_alloc_requests = NectarModels.AllocationRequest.objects.filter(parent_request_id=None)
     create_projects(nectar_alloc_requests)
@@ -54,6 +56,8 @@ def migrate():
 # creates projects from nectar allocation request list, if child == True then proceed to get/add parent to project
 # only creates the project if user can be matched with the allocation request and if a child request has a parent
 def create_projects(alloc_requests, child=False):
+    global user_errors, user_count, parent_errors, parent_count
+
     for alloc_request in alloc_requests:
         # create a crams project
         crams_project = CramsModels.Project()

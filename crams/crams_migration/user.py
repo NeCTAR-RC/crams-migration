@@ -3,14 +3,19 @@ from account.models import User
 from rcallocation import models as nectar_models
 from crams import models as crams_models
 from crams.crams_migration.question import create_project_question_response
+import csv
 import simplejson
 import logging
 
 LOG = logging.getLogger(__name__)
 
 # user mapping of missing keystone users
-json_data = open(BASE_DIR + '/missing_keystone_users/missing_keystone_users.json')
+json_data = open(BASE_DIR + '/keystone_users/missing_keystone_users.json')
 ks_user_mapping_dict = simplejson.load(json_data)
+
+# load keystone user from csv file
+keystone_users_data = open(BASE_DIR + '/keystone_users/keystone-users.csv')
+keystone_users_list = list(csv.reader(keystone_users_data))
 
 
 # Gets a user and contact object from crams, if not found then a new
@@ -28,14 +33,12 @@ def get_user(email):
     except User.DoesNotExist:
         # look up user in keystone
         try:
-            ks_user = nectar_models.KeystoneUser.objects.get(name=email)
-            # create new user from keystone details
-            return create_user(ks_user.name, ks_user.uuid)
+            keystone_user = [x for x in keystone_users_list if x[1] == email][0]
+            return create_user(keystone_user[1], keystone_user[0])
 
-        except nectar_models.KeystoneUser.DoesNotExist:
-            # Look in '/missing_keystone_users/missing_keystone_users.json'
+        except IndexError:
+            # Look in '../../keystone_users/missing_keystone_users.json'
             # to try and map a user keystone email to the allocation contact_email
-
             try:
                 # try and create a user from the mapping email details
                 mapped = ks_user_mapping_dict[email]

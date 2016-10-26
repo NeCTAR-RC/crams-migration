@@ -32,6 +32,11 @@ class MissUserAllocation:
 
 
 class FindMissingKeystoneUsersRequest:
+    def __init__(self):
+        # load keystone user from csv file
+        self.keystone_users_data = open(BASE_DIR + '/keystone_users/keystone-users.csv')
+        self.keystone_users_list = list(csv.reader(self.keystone_users_data))
+
     def find(self):
         print('found missing keystone user requests ...')
 
@@ -42,8 +47,9 @@ class FindMissingKeystoneUsersRequest:
 
         for req in nectar_requests:
             contact_email = req.contact_email
-            keystone_user = nc.KeystoneUser.objects.filter(name=contact_email)
-            if not keystone_user:
+            try:
+                keystone_user = [x for x in self.keystone_users_list if x[1] == contact_email][0]
+            except IndexError:
                 missing_user_alloc = missing_user_allocs.get(contact_email)
                 if not missing_user_alloc:
                     missing_user_alloc = MissUserAllocation(contact_email)
@@ -57,7 +63,8 @@ class FindMissingKeystoneUsersRequest:
                 missing_user_allocs[contact_email] = missing_user_alloc
 
                 total_not_found_keystone_user += 1
-        csv_file = open(BASE_DIR + '/missing_keystone_users/user_not_found_requests.csv', 'w', newline='')
+
+        csv_file = open(BASE_DIR + '/keystone_users/user_not_found_requests.csv', 'w', newline='')
         csv_file_writer = csv.writer(csv_file, delimiter='\t', lineterminator='\n')
 
         csv_file_writer.writerow(['contact_email', 'id', 'status', 'created_by', 'tenant_uuid', 'project_name'])

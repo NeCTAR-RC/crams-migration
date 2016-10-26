@@ -10,5 +10,5 @@ rcportal_migration/tests/reporter/*.xml
 *.sqlite3
 rcportal_migration.egg-info
 log/*.log
-missing_keystone_users/*.csv
+keystone_users/*.csv
 .python-version
