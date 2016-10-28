@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.db import migrations
-from crams.settings import BASE_DIR
+from rcportal_migration.settings import BASE_DIR
 
 import os
 
