@@ -1,0 +1,9 @@
+{
+  "john.doe@xyz.edu.au": {
+    "name": "john.doe@abc.edu.au",
+    "uuid": "00000000000000001",
+    "extra": {
+      "email": "john.doe@abc.edu.au"
+    }
+  }
+}
