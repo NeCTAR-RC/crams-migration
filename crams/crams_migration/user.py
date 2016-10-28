@@ -10,12 +10,18 @@ import logging
 LOG = logging.getLogger(__name__)
 
 # user mapping of missing keystone users
-json_data = open(BASE_DIR + '/keystone_users/missing_keystone_users.json')
-ks_user_mapping_dict = simplejson.load(json_data)
+try:
+    json_data = open(BASE_DIR + '/keystone_users/missing_keystone_users.json')
+    ks_user_mapping_dict = simplejson.load(json_data)
+except:   
+    ks_user_mapping_dict = None
 
 # load keystone user from csv file
-keystone_users_data = open(BASE_DIR + '/keystone_users/keystone-users.csv')
-keystone_users_list = list(csv.reader(keystone_users_data))
+try:
+    keystone_users_data = open(BASE_DIR + '/keystone_users/keystone-users.csv')
+    keystone_users_list = list(csv.reader(keystone_users_data))
+except:
+    keystone_users_list = None
 
 
 # Gets a user and contact object from crams, if not found then a new
