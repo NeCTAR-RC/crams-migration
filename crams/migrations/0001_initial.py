@@ -126,7 +126,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, primary_key=True, auto_created=True)),
                 ('funding_body_and_scheme', models.CharField(max_length=200)),
                 ('grant_id', models.CharField(blank=True, max_length=200)),
-                ('start_year', models.IntegerField(validators=[django.core.validators.MinValueValidator(1970), django.core.validators.MaxValueValidator(3000)], error_messages={'min_value': 'Please input a year between 1970 ~ 3000', 'max_value': 'Please input a year between 1970 ~ 3000'}, default=2016)),
+                ('start_year', models.IntegerField(validators=[django.core.validators.MinValueValidator(1970), django.core.validators.MaxValueValidator(3000)], error_messages={'min_value': 'Please input a year between 1970 ~ 3000', 'max_value': 'Please input a year between 1970 ~ 3000'}, default=2017)),
                 ('total_funding', models.FloatField(blank=True, default=0.0)),
             ],
         ),

@@ -365,6 +365,13 @@ class Request(CramsCommon):
 
     funding_scheme = models.ForeignKey(FundingScheme, related_name='requests')
 
+    national_percent = models.PositiveSmallIntegerField(
+        default=100, validators=[MaxValueValidator(100)]
+    )
+    
+    allocation_node = models.ForeignKey(
+        'AllocationHome', null=True, blank=True, related_name='requests')
+
     start_date = models.DateField(
         default=datetime.date.today
     )

@@ -494,6 +494,8 @@ class MigrationValidation:
             nc_approval_note = nc_request.status_explanation
             nc_status = self._gen_cm_request_status(nc_request)
             nc_parent_request = nc_request.parent_request
+            nc_fund_nat_percent = nc_request.funding_national_percent
+            nc_funding_node = nc_request.funding_node
 
             created_by_user = cm_project.created_by
             cm_req_created_by_user = cm_request.created_by
@@ -506,6 +508,10 @@ class MigrationValidation:
             cm_req_status = cm_request.request_status
             cm_parent_request = cm_request.parent_request
             cm_funding_scheme = cm_request.funding_scheme
+            cm_nat_percent = cm_request.national_percent
+            cm_alloc_node = cm_request.allocation_node
+            
+            
             if cm_funding_scheme is None or cm_funding_scheme.funding_scheme != 'NeCTAR National Merit':
                 LOG.error(
                     'Funding scheme is not set properly, [nectar request id: {} - crams request id: {}]'.format(
@@ -584,7 +590,21 @@ class MigrationValidation:
                             'No project provision details is migrated [nectar request id: {} - crams request id: {}, crams project id{}]'.format(
                                 nc_request.id, cm_request.id, cm_project.id))
 
-                            # compare the request question response
+            if cm_nat_percent != nc_fund_nat_percent:
+                LOG.error(
+                    'The rcallocation.funding_national_percentage does not match the crams request.national percent [nectar request id: {} - crams request id: {}, crams project id: {}]'.format(
+                        nc_request.id, cm_request.id, cm_project.id))
+                        
+            if cm_alloc_node is None: 
+                if nc_funding_node is not None:
+                    LOG.error('The rcallocation.funding_node is not empty, does not match with crams request.allocation_node [nectar request id: {} - crams request id: {}, crams project id: {}]'.format(
+                        nc_request.id, cm_request.id, cm_project.id))
+            else:
+                if cm_alloc_node.code != nc_funding_node:
+                    LOG.error('The rcallocation.funding_node does not match with crams request.allocation_node [nectar request id: {} - crams request id: {}, crams project id: {}]'.format(
+                        nc_request.id, cm_request.id, cm_project.id))
+            
+            # compare the request question response
             self.compare_request_question_response(nc_request, cm_request)
             self.compare_compute_request(nc_request, cm_request)
             self.compare_storage_request(nc_request, cm_request)

@@ -26,6 +26,12 @@ def create_request(alloc_request, crams_project):
     funding_scheme = crams_models.FundingScheme.objects.get(funding_scheme="NeCTAR National Merit")
     crams_request.funding_scheme = funding_scheme
 
+    # get the funding national percentage
+    crams_request.national_percent = alloc_request.funding_national_percent
+
+    # get the allocation_node
+    crams_request.allocation_node = get_allocation_node(alloc_request)
+
     # Check request project has a parent, if yes use parent project.request as request parent
     if crams_project.parent_project:
         crams_request.parent_request = crams_project.parent_project.requests.all()[0]
@@ -53,6 +59,18 @@ def create_request(alloc_request, crams_project):
     create_request_question_response(crams_request, 'n_approver_email', alloc_request.approver_email)
 
     return crams_request
+
+
+def get_allocation_node(alloc_request):
+    if alloc_request.funding_node != None:
+        try:
+            return crams_models.AllocationHome.objects.get(code=alloc_request.funding_node)
+        except:
+            LOG.error("Could not map funding node: " + alloc_request.funding_node)
+
+    # return None if funding_node is None or an error in the lookup
+    return None
+
 
 
 def get_funding_scheme(alloc_request):
