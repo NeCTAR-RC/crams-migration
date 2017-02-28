@@ -219,7 +219,7 @@ class FundingBody(models.Model):
         max_length=200
     )
 
-    email = models.EmailField()
+    email = models.EmailField(null=True, blank=True)
 
     class Meta:
         app_label = 'crams'
@@ -259,7 +259,7 @@ class Project(CramsCommon):
     )
 
     description = models.CharField(
-        max_length=255
+        max_length=1500
     )
 
     notes = models.TextField(
@@ -329,7 +329,7 @@ class ProjectID(models.Model):
         app_label = 'crams'
 
     def __str__(self):
-        return '{} {}'.format(self.identifier, self.project)
+        return '{} - {} {}'.format(self.system, self.identifier, self.project)
 
 
 class RequestStatus(models.Model):
@@ -368,8 +368,8 @@ class Request(CramsCommon):
     national_percent = models.PositiveSmallIntegerField(
         default=100, validators=[MaxValueValidator(100)]
     )
-    
-    allocation_node = models.ForeignKey(
+
+    allocation_home = models.ForeignKey(
         'AllocationHome', null=True, blank=True, related_name='requests')
 
     start_date = models.DateField(
@@ -420,33 +420,27 @@ class ComputeRequest(ProvisionableItem):
     ComputeRequest Model
     """
     instances = models.IntegerField(
-        default=2,
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(0)]
     )
 
     approved_instances = models.IntegerField(
-        default=2,
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(0)]
     )
 
     cores = models.IntegerField(
-        default=2,
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(0)]
     )
 
     approved_cores = models.IntegerField(
-        default=2,
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(0)]
     )
 
     core_hours = models.IntegerField(
-        default=744,
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(0)]
     )
 
     approved_core_hours = models.IntegerField(
-        default=744,
-        validators=[MinValueValidator(1)]
+        validators=[MinValueValidator(0)]
     )
 
     compute_product = models.ForeignKey(
@@ -572,13 +566,11 @@ class Grant(models.Model):
     grant_type = models.ForeignKey(GrantType, related_name='grants')
 
     funding_body_and_scheme = models.CharField(
-        blank=False,
-        max_length=200
+        blank=False, max_length=200
     )
 
     grant_id = models.CharField(
-        blank=True,
-        max_length=200
+        blank=True, null=True, max_length=200
     )
 
     start_year = models.IntegerField(
@@ -590,9 +582,17 @@ class Grant(models.Model):
             'max_value': 'Please input a year between 1970 ~ 3000'}
     )
 
+    duration = models.IntegerField(
+        blank=False,
+        validators=[MinValueValidator(1), MaxValueValidator(1000)],
+        error_messages={
+            'min_value': 'Please enter funding duration (in months 1-1000).',
+            'max_value': 'Please enter funding duration (in months 1~1000).'}
+    )
+
     total_funding = models.FloatField(
         blank=True,
-        default=0.0
+        default=0.0,
     )
 
     class Meta:
@@ -810,7 +810,7 @@ class AllocationHome(models.Model):
     Allocation Home
     """
     code = models.CharField(
-        max_length=50
+        max_length=50, unique=True
     )
     description = models.CharField(
         max_length=200
@@ -828,6 +828,7 @@ class NotificationTemplate(models.Model):
                                      related_name='notification_templates')
     request_status = models.ForeignKey(RequestStatus)
     template_file_path = models.CharField(max_length=99)
+    alert_funding_body = models.BooleanField(default=False)
 
     class Meta:
         app_label = 'crams'

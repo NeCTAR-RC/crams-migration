@@ -233,6 +233,7 @@ def create_grant(alloc_request, crams_project):
 
         crams_grant.project = crams_project
         crams_grant.funding_body_and_scheme = nectar_grant.funding_body_scheme
+        crams_grant.duration = 0
 
         crams_grant.save()
 
